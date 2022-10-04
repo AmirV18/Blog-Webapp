@@ -5,7 +5,7 @@
 * 
 *  Name: ____Amir Vassell_____ Student ID: 154737209 Date: ___October 3, 2022___
 *
-*  Cyclic Web App URL: ________________________________________________________
+*  Cyclic Web App URL: https://yellow-haddock-vest.cyclic.app/
 *
 *  GitHub Repository URL: https://github.com/AmirV18/web322-app.git
 *
