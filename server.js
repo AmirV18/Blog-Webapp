@@ -59,7 +59,7 @@ app.get("/about", (req,res) => {
 app.get("/posts", (req,res) =>{ //UPDATE
 
     if(req.query.category){
-        blogService.getPostByCategory(req.query.category).then((data) => {
+        blogService.getPostsByCategory(req.query.category).then((data) => {
             res.json(data);
         })
     }else if(req.query.minDate){
