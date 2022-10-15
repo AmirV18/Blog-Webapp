@@ -16,12 +16,27 @@ const res = require("express/lib/response")
 var app = express(); 
 var blogService = require ('./blog-service.js')
 
+const multer = require("multer");
+const upload = multer();
+
+const cloudinary = require('cloudinary').v2;
+
+const streamifier = require('streamifier');
+
 var HTTP_PORT = process.env.PORT || 8080;
 var path = require("path");
 
 //require blog-service module - can be used to interact with data from server.js
 var blogService = require('./blog-service.js')
 const { rmSync } = require("fs")
+
+cloudinary.config({
+    cloud_name: 'dvujduppr',
+    api_key: '796685354338326',
+    api_secret: 'Di_BUGp22RP2Qf7FocPdccOWXBg',
+    secure: true
+});
+
 
 //STATIC ROUTE
 app.use(express.static("public"));
@@ -36,14 +51,81 @@ app.get("/about", (req,res) => {
     res.sendFile(path.join(__dirname, "/views/about.html"));
 });
 
+
+
 // posts 
-app.get("/posts", (req,res) =>{
+app.get("/posts", (req,res) =>{ //UPDATE
+
+    if(req.query.category){
+        blogService.getPostByCategory(req.query.category).then((data) => {
+            res.json(data);
+        })
+    }else if(req.query.minDate){
+        blogService.getPostsByMinDate(req.category.minDate).then((data)=>{
+            res.json(data);
+        })
+    }else{
     blogService.getAllPosts().then((data) => {
         res.json(data);
     }).catch((err) => {
         res.json({message: err});
     })
-});
+    }
+    //
+})
+
+app.get("/posts/add", (req, res) =>{
+    res.sendFile(path.join(__dirname, "/views/addPost.html"));
+})
+
+app.get("/post/value", (req, res) =>{
+    if(req.query.id){
+        blogService.getPostById(req.query.id).then((data) =>{
+            res.json(data)
+        })
+    }
+})
+
+app.post("/posts/add",upload.single("featureImage"), (req,res) => {
+    if(req.file){
+        let streamUpload = (req) => {
+            return new Promise((resolve, reject) => {
+                let stream = cloudinary.uploader.upload_stream(
+                    (error, result) => {
+                        if (result) {
+                            resolve(result);
+                        } else {
+                            reject(error);
+                        }
+                    }
+                );
+    
+                streamifier.createReadStream(req.file.buffer).pipe(stream);
+            });
+        };
+    
+        async function upload(req) {
+            let result = await streamUpload(req);
+            console.log(result);
+            return result;
+        }
+    
+        upload(req).then((uploaded)=>{
+            processPost(uploaded.url);
+        });
+    }else{
+        processPost("");
+    }
+     
+    function processPost(imageUrl){
+        req.body.featureImage = imageUrl;
+         blogService.addPost(req.body).then(() => {
+            res.redirect("/posts");
+         })
+        // TODO: Process the req.body and add it as a new Blog Post before redirecting to /posts
+    } 
+    
+})
 
 //categories 
 app.get("/categories", (req,res) => {
