@@ -34,7 +34,7 @@ module.exports.getAllPosts = function(){
 //getPublishedPosts()
 module.exports.gePublishedPosts = function(){
     return new Promise(function(resolve, reject){
-        var publishPosts = []
+        var publishedPosts = []
         let i = 0
         do {
             if(posts[i].published === true){
@@ -42,8 +42,12 @@ module.exports.gePublishedPosts = function(){
             }
             i++
         } while (i!=posts.length)
-        if(publishedPosts.length === 0) reject("no results returned")
-        resolved(publishedPosts)
+
+        if(publishedPosts.length === 0) {
+             reject("no results returned")
+        }
+       
+        resolve(publishedPosts)
     })
 }
 

@@ -140,7 +140,7 @@ app.get("/categories", (req,res) => {
 
 //blog 
 app.get("/blog", (req,res) =>{
-    blogService.getAllCategories().then((data) => {
+    blogService.gePublishedPosts().then((data) => {
         res.json(data);
     }).catch((err) => {
         res.json({message: err});
