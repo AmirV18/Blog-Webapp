@@ -32,7 +32,7 @@ module.exports.getAllPosts = function(){
 }
 
 //getPublishedPosts()
-module.exports.gePublishedPosts = function(){
+module.exports.getPublishedPosts = function(){
     return new Promise(function(resolve, reject){
         var publishedPosts = []
         let i = 0
@@ -70,6 +70,8 @@ module.exports.addPost = (postData) => {
                 postData.published = true;
             }
             postData.id = posts.length + 1;
+            let currentDate = new Date().toJSON().slice(0,10);
+            postData.postDate = currentDate;
             posts.push(postData);
             resolve(postData);
         }else{
@@ -87,6 +89,21 @@ module.exports.getPostsByCategory = (category) =>{
         })
 
         categoryPosts.length > 0 ? resolve(categoryPosts) : reject("no results returned");
+        // let categoryPosts = [];
+
+        // for(let i = 0; i < posts.length; i++){
+        //     //var post;
+        //     if (categoryPosts[i].category == category){
+        //         categoryPosts[i] = posts[i];
+        //     }
+        // }
+
+        // if(categoryPosts){
+        //     resolve(categoryPosts);
+        // }else{
+        //     reject("No posts not found");
+        // }
+
     })
 }
 
@@ -102,10 +119,39 @@ module.exports.getPostsByMinDate = (minDateStr) =>{
 
 module.exports.getPostById = (id) =>{
     return new Promise((resolve, reject) => {
-        const idPosts = posts.filter((post) => {
-            return post.id == id;
-        })
+        for(let i = 0; i < posts.length; i++){
+            var post;
+            if (posts[i].id == id){
+                post = posts[i];
+            }
+        }
 
-        idPosts.length > 0 ? resolve(idPosts) : reject("no results returned");
+        if(post){
+            resolve(post);
+        }else{
+            reject("Post not found");
+        }
+
+        
     })
 }
+
+module.exports.getPublishedPostsByCategory = (category) =>{
+    return new Promise(function(resolve, reject){
+        var publishedPostsByCategory =  [];
+
+        for(let i = 0; i < posts.length; i++){
+            if(posts[i].published == true && posts[i].category == category){
+                publishedPostsByCategory.push(posts[i]);
+        }
+    }
+
+
+        if(publishedPostsByCategory.length === 0) {
+            reject("no results returned")
+       }
+      
+       resolve(publishedPostsByCategory);
+    })
+}
+
