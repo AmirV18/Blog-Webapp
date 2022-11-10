@@ -78,7 +78,7 @@ app.use(express.static("public"));
 
 //REDIRECTING ROUTE
 app.get("/", (req, res) => {
-    res.redirect('/about');
+    res.redirect('/blog');
 });
 
 //about route 
@@ -318,9 +318,13 @@ app.get('/blog/:id', async (req, res) => {
     res.render("blog", {data: viewData})
 });
 
+
 //NO MATCHING ROUTE
 app.use((req,res) => {
-    res.status(404).send("Page Not Found");
+    res.render('404.hbs', {
+        layout: 'main'
+    })
+    //res.status(404).send("Page Not Found");
 });
 
 blogService.initialize().then(() =>{
