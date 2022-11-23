@@ -33,7 +33,7 @@ var Category = sequelize.define("Category", {
   category: Sequelize.STRING
 });
 
-Post.belongsTo(Category, {foreignKey: 'categoryID'});
+Post.belongsTo(Category, {foreignKey: 'category'});
 
 module.exports.initialize = function () {
   // return new Promise(function(resolve, reject){
@@ -164,7 +164,7 @@ module.exports.addPost = (postData) => {
 };
 
 //Grabbing a new post by category
-module.exports.getPostsByCategory = (categoryid) => {
+module.exports.getPostsByCategory = (id) => {
   // return new Promise((resolve, reject) => {
   //     const categoryPosts = posts.filter((post) => {
   //         return post.category == category;
@@ -176,7 +176,7 @@ module.exports.getPostsByCategory = (categoryid) => {
   return new Promise((resolve, reject) => {
     Post.findAll({
         where: {
-            categoryID: categoryid
+            id: id
         }
     }).then((categoryData) => {
         resolve(categoryData);
@@ -230,7 +230,7 @@ module.exports.getPostById = (id) => {
   return new Promise((resolve, reject) => {
     Post.findAll({
         where: {
-            postID: id
+            id: id
         }
     }).then((postData) => {
         resolve(postData[0]);
@@ -260,7 +260,7 @@ module.exports.getPublishedPostsByCategory = (category) => {
     Post.findAll({
         where: {
             published: true,
-            categoryID : category
+            id : category
         }
     }).then((categoryData) => {
         console.log(categoryData)
