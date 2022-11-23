@@ -158,7 +158,7 @@ app.get("/posts/add", (req, res) =>{
     //res.sendFile(path.join(__dirname, "/views/addPost.html"));
     blogService.getAllCategories().then((categories) =>{
         res.render('addPost', {
-            data: categories,
+            category: categories,
             layout: 'main'
         });
     }).catch(() =>{
