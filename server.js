@@ -1,11 +1,11 @@
 /*********************************************************************************
-*WEB322 – Assignment 04
+*WEB322 – Assignment 05
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part 
 *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
 
 * 
-*  Name: ____Amir Vassell_____ Student ID: 154737209 Date: ___October 3, 2022___
+*  Name: ____Amir Vassell_____ Student ID: 154737209 Date: ___November 23, 2022___
 *
 *  Cyclic Web App URL: https://yellow-haddock-vest.cyclic.app/
 *
@@ -46,7 +46,13 @@ app.engine('.hbs', exphbs.engine({ extname: '.hbs',
         }, //HELPER 2
         safeHTML: function(context){
             return stripJs(context);
-        } //HELPER 3 
+        }, //HELPER 3 
+        formatDate: function(dateObj){
+            let year = dateObj.getFullYear();
+            let month = (dateObj.getMonth() + 1).toString();
+            let day = dateObj.getDate().toString();
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2,'0')}`;
+        } //HELPER 4
     } //brace for helpers
 }));
 app.set('view engine', '.hbs');
@@ -56,7 +62,8 @@ var path = require("path");
 
 //require blog-service module - can be used to interact with data from server.js
 var blogService = require('./blog-service.js')
-const { rmSync } = require("fs")
+const { rmSync } = require("fs");
+const { brotliDecompress } = require("zlib");
 
 cloudinary.config({
     cloud_name: 'dvujduppr',
@@ -64,6 +71,8 @@ cloudinary.config({
     api_secret: 'Di_BUGp22RP2Qf7FocPdccOWXBg',
     secure: true
 });
+
+app.use(express.urlencoded({extended: true}));
 
 app.use(function(req,res,next){ //ADDED IN A4
     let route = req.path.substring(1);
@@ -100,10 +109,12 @@ app.get("/posts", (req,res) =>{ //UPDATE
         blogService.getPostsByCategory(req.query.category)
         .then((data) => {
             //res.json(data);
+            if(data.length > 0){
             res.render('posts', {
-
                 posts : data
-            })
+            })}else{
+                res.render("posts",{ message: "no results" });
+            }
         })
         .catch((err) =>{
             res.render('posts',{
@@ -114,17 +125,24 @@ app.get("/posts", (req,res) =>{ //UPDATE
         blogService.getPostsByMinDate(req.category.minDate)
         .then((data)=>{
             //res.json(data);
-            res.render('posts', {
-                posts : data
-            })
+            if(data.length > 0){
+                res.render('posts', {
+                    posts : data
+                })}else{
+                    res.render("posts",{ message: "no results" });
+                }
         })
     }else{
     blogService.getAllPosts()
     .then((data) => {
         //res.json(data);
-        res.render('posts', {
-            posts: data
-        })
+        if(data.length > 0){
+            res.render('posts', {
+                posts : data
+            })
+        }else{
+                res.render("posts",{ message: "no results" });
+            }
     })
     .catch((err) => {
         //res.json({message: err});
@@ -138,10 +156,17 @@ app.get("/posts", (req,res) =>{ //UPDATE
 
 app.get("/posts/add", (req, res) =>{
     //res.sendFile(path.join(__dirname, "/views/addPost.html"));
-    
-    res.render('addPost', {
-        layout: 'main'
-    });
+    blogService.getAllCategories().then((categories) =>{
+        res.render('addPost', {
+            data: categories,
+            layout: 'main'
+        });
+    }).catch(() =>{
+        res.render("addPost", {
+            data: [],
+            layout: 'main'
+        }); 
+    })
 })
 
 app.get("/posts/:value", (req, res) =>{
@@ -194,14 +219,26 @@ app.post("/posts/add",upload.single("featureImage"), (req,res) => {
     } 
     
 })
+app.get("/posts/delete/:id", (req, res) =>{
+    if(req.params.id){
+        blogService.deletePostById(req.params.id).then(() =>{
+            res.redirect("/posts");
+        }).catch((err) =>{
+            res.status(500).send("Unable to remove post/ post not found. Error: " + err);
+        })
+    }
+})
 
 //categories 
 app.get("/categories", (req,res) => {
     blogService.getAllCategories().then((data) => {
         //res.json(data);
+        if(data.length > 0){
         res.render('categories', {
             categories: data
-        })
+        })}else{
+            res.render("categories",{ message: "no results" });
+        }
      }).catch((err) => {
         //res.json({message: err});
         res.render('categories',{
@@ -209,6 +246,31 @@ app.get("/categories", (req,res) => {
         })
      })
 });
+
+app.get("/categories/add", (req, res) =>{
+    //res.sendFile(path.join(__dirname, "/views/addPost.html"));
+    res.render('addCategory', {
+        layout: 'main'
+    });
+})
+
+app.post("/categories/add", (req, res) =>{
+    console.log(req.body);
+    blogService.addCategory(req.body).then(() => {
+        res.redirect("/categories");
+     })
+})
+
+app.get("/categories/delete/:id", (req, res) =>{
+    if(req.params.id){
+        blogService.deleteCategoryById(req.params.id).then(() =>{
+            res.redirect("/categories");
+        }).catch((err) =>{
+            res.status(500).send("Unable to remove category/ category not found. Error: " + err);
+        })
+    }
+})
+
 
 //blog 
 app.get('/blog', async (req, res) => {
@@ -334,4 +396,3 @@ blogService.initialize().then(() =>{
 }).catch(() => {
     console.log('Error: Server not started')
 })
-
