@@ -176,7 +176,7 @@ module.exports.getPostsByCategory = (id) => {
   return new Promise((resolve, reject) => {
     Post.findAll({
         where: {
-            id: id
+            category: id
         }
     }).then((categoryData) => {
         resolve(categoryData);
@@ -260,7 +260,7 @@ module.exports.getPublishedPostsByCategory = (category) => {
     Post.findAll({
         where: {
             published: true,
-            id : category
+            category : category
         }
     }).then((categoryData) => {
         console.log(categoryData)
