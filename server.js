@@ -17,6 +17,8 @@ var express = require("express");
 const res = require("express/lib/response")
 var app = express(); 
 var blogService = require ('./blog-service.js')
+const authData = require('./auth-service.js')
+const clientSession = require("client-sessions")
 
 const multer = require("multer");
 const upload = multer();
@@ -85,6 +87,30 @@ app.use(function(req,res,next){ //ADDED IN A4
 //STATIC ROUTE
 app.use(express.static("public"));
 
+
+//COOKIES/SESSIONS
+
+app.use(clientSession({
+    cookieName: "session", // this is the object name that will be added to 'req'
+    secret: "week10example_web322", // this should be a long un-guessable string.
+    duration: 2 * 60 * 1000, // duration of the session in milliseconds (2 minutes)
+    activeDuration: 1000 * 60 // the session will be extended by this many ms each request (1 minute)
+  }))
+
+  app.use(function(req, res, next) {
+    res.locals.session = req.session;
+    next();
+  });
+
+  function ensureLogin(req, res, next) {
+    if (!req.session.user) {
+      res.redirect("/login");
+    } else {
+      next();
+    }
+  }
+//////////////////
+
 //REDIRECTING ROUTE
 app.get("/", (req, res) => {
     res.redirect('/blog');
@@ -103,7 +129,7 @@ app.get("/about", (req,res) => {
 
 
 // posts 
-app.get("/posts", (req,res) =>{ //UPDATE
+app.get("/posts", ensureLogin,(req,res) =>{ //UPDATE
 
     if(req.query.category){
         blogService.getPostsByCategory(req.query.category)
@@ -154,7 +180,7 @@ app.get("/posts", (req,res) =>{ //UPDATE
     //
 })
 
-app.get("/posts/add", (req, res) =>{
+app.get("/posts/add", ensureLogin, (req, res) =>{
     //res.sendFile(path.join(__dirname, "/views/addPost.html"));
     blogService.getAllCategories().then((categories) =>{
         res.render('addPost', {
@@ -169,7 +195,7 @@ app.get("/posts/add", (req, res) =>{
     })
 })
 
-app.get("/posts/:value", (req, res) =>{
+app.get("/posts/:value", ensureLogin,(req, res) =>{
     //console.log(req.params.value)
     if(req.params.value){
         blogService.getPostById(req.params.value)
@@ -179,7 +205,7 @@ app.get("/posts/:value", (req, res) =>{
     }
 })
 
-app.post("/posts/add",upload.single("featureImage"), (req,res) => {
+app.post("/posts/add",ensureLogin ,upload.single("featureImage"), (req,res) => {
     if(req.file){
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
@@ -219,7 +245,7 @@ app.post("/posts/add",upload.single("featureImage"), (req,res) => {
     } 
     
 })
-app.get("/posts/delete/:id", (req, res) =>{
+app.get("/posts/delete/:id", ensureLogin, (req, res) =>{
     if(req.params.id){
         blogService.deletePostById(req.params.id).then(() =>{
             res.redirect("/posts");
@@ -230,7 +256,7 @@ app.get("/posts/delete/:id", (req, res) =>{
 })
 
 //categories 
-app.get("/categories", (req,res) => {
+app.get("/categories", ensureLogin, (req,res) => {
     blogService.getAllCategories().then((data) => {
         //res.json(data);
         if(data.length > 0){
@@ -247,21 +273,21 @@ app.get("/categories", (req,res) => {
      })
 });
 
-app.get("/categories/add", (req, res) =>{
+app.get("/categories/add", ensureLogin, (req, res) =>{
     //res.sendFile(path.join(__dirname, "/views/addPost.html"));
     res.render('addCategory', {
         layout: 'main'
     });
 })
 
-app.post("/categories/add", (req, res) =>{
+app.post("/categories/add", ensureLogin, (req, res) =>{
     console.log(req.body);
     blogService.addCategory(req.body).then(() => {
         res.redirect("/categories");
      })
 })
 
-app.get("/categories/delete/:id", (req, res) =>{
+app.get("/categories/delete/:id", ensureLogin,(req, res) =>{
     if(req.params.id){
         blogService.deleteCategoryById(req.params.id).then(() =>{
             res.redirect("/categories");
@@ -380,6 +406,61 @@ app.get('/blog/:id', async (req, res) => {
     res.render("blog", {data: viewData})
 });
 
+//LOGIN ROUTES
+
+app.get("/login", (req, res) =>{
+    res.render("login", {
+        layout: 'main'
+    })
+})
+
+app.get("/register", (req, res) =>{
+    res.render("register", {
+        layout: 'main'
+    })
+})
+
+app.post("/register", (req, res) =>{
+    authData.registerUser(req.body).then((data) =>{
+        console.log(data);
+        res.render("register",{
+            successMessage: "User created"
+        })
+    }).catch((err) =>{
+        res.render("register", {
+            errorMessage: err, userName: req.body.userName
+        })
+    })
+})
+
+app.post("/login", (req,res) =>{
+    req.body.userAgent = req.get('User-Agent');
+    authData.checkUser(req.body).then((users) => {
+        req.session.users = {
+            userName: users.userName,
+            email: users.email,
+            loginHistory: users.loginHistory
+        }
+    
+        res.redirect('/posts');
+    }).catch((err)=>{
+        res.render("login", {
+            errorMessage: err, userName: req.body.userName
+        })
+    }) 
+})
+
+app.get("/logout", (req, res) =>{
+    req.session.reset();
+  res.redirect("/");
+})
+
+app.get("/userHistory", ensureLogin, (req, res) =>{
+    res.render("userHistory", {
+        layout : 'main'
+    })
+})
+/////////////
 
 //NO MATCHING ROUTE
 app.use((req,res) => {
@@ -389,7 +470,9 @@ app.use((req,res) => {
     //res.status(404).send("Page Not Found");
 });
 
-blogService.initialize().then(() =>{
+blogService.initialize()
+.then(authData.initialize)
+.then(() =>{
     app.listen(HTTP_PORT, () => {
         console.log('Express HTTP server is listening to the port', HTTP_PORT)
     })
