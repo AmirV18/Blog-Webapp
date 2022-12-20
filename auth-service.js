@@ -30,7 +30,7 @@ module.exports.initialize = function () {
    });
 };
 
-module.exports.registerUser = (userData) =>{
+module.exports.registerUser = (userData) =>{ //this is sending undefined data from register route
    return new Promise((resolve, reject) => {
       if(userData.password != userData.password2){
          reject("PASSWORDS DO NOT MATCH!");
@@ -38,47 +38,47 @@ module.exports.registerUser = (userData) =>{
          bcrypt.hash(userData.password, 10).then((hash)=>{
             userData.password = hash;
             let newUser = new User(userData);
-            newUser.save().then(() =>{
-              //resolve();
-            }).catch((err) =>{
-               if(err.code == 11000){
-                  reject("USERNAME IS TAKEN");
+            console.log(newUser + "\nDebugging here in register user function");
+            newUser.save((err)=>{
+               if(err){
+                  if(err.code == 11000){
+                     reject("USERNAME IS TAKEN");
+                  }else{
+                     reject("There was an error creating the user: " + err);
+                  }
                }else{
-                  reject("There was an error creating the user: " + err);
+                  resolve();
                }
-            })
+            });
          }).catch((err) => {
-            console.log(err)
+           // console.log(err)
             reject("ERROR WITH PASSWORD ENCRYPTION")
-        })
+        });
       }
-   })
+   });
 }
 
 module.exports.checkUser = (userData) =>{
    return new Promise((resolve, reject) =>{
       //console.log(userName);
-      User.findOne({userName : userData.userName}) //problem is here
+      User.find({userName : userData.userName}) //problem is here
       .exec()
       .then((user) =>{
          if(user.length == 0){
             reject("Unable to find user: " + userData.userName)
-         // }else if(users[0].password != userData.password){
-         //    reject("Incorrect Password for user: " + userData.userName)
          }
          else{
-            bcrypt.compare(userData.password, hash).then((result) => {
+            bcrypt.compare(userData.password, user[0].password).then((result) => { //updated to check against users[0] password instead of hash
               // result === true if it matches and result === false if it does not match
               if (result === true) {
-                user.loginHistory.push({
-                  dateTime: new Date(),
-                  userAgent: userData.userAgent,
+                user[0].loginHistory.push({
+                  dateTime: (new Date()).toString(),
+                  userAgent: userData.userAgent
                 });
                 User.updateOne(
                   { userName: user[0].userName },
                   { $set: { loginHistory: user[0].loginHistory } }
-                )
-                  .exec()
+                ).exec()
                   .then(() => {
                     resolve(user[0]);
                   })

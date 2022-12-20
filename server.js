@@ -421,8 +421,9 @@ app.get("/register", (req, res) =>{
 })
 
 app.post("/register", (req, res) =>{
-    authData.registerUser(req.body).then((data) =>{
-        console.log(data);
+    authData.registerUser(req.body).then(() =>{ //removed data from inside .then
+        //something is wrong in registerUser
+        
         res.render("register",{
             successMessage: "User created"
         })
@@ -435,11 +436,11 @@ app.post("/register", (req, res) =>{
 
 app.post("/login", (req,res) =>{
     req.body.userAgent = req.get('User-Agent');
-    authData.checkUser(req.body).then((users) => {
-        req.session.users = {
-            userName: users.userName,
-            email: users.email,
-            loginHistory: users.loginHistory
+    authData.checkUser(req.body).then((user) => {
+        req.session.user = {
+            userName: user.userName,
+            email: user.email,
+            loginHistory: user.loginHistory
         }
     
         res.redirect('/posts');

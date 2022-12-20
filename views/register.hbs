@@ -8,7 +8,7 @@
     </div>
     {{/if}}
     {{#unless successMessage}}
-    <form action="/register" method="POST">
+    <form action="/register" method="post">
       <div class="form-group">
         <label for="userName">Username</label>
         <input type="text" class="form-control" id="userName" name="userName" placeholder="User Name" required>
@@ -26,7 +26,7 @@
         <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirm password" required>
       </div>
       </br>
-      <button type="submit" class="btn btn-success">Register</button>
+      <input type="submit" class="btn btn-success pull-right" value="Register" />
     </form>
     {{else}}
     <div class="alert alert-success" role="alert">
