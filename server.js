@@ -1,18 +1,3 @@
-/*********************************************************************************
-*WEB322 – Assignment 05
-*  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part 
-*  of this assignment has been copied manually or electronically from any other source 
-*  (including 3rd party web sites) or distributed to other students.
-
-* 
-*  Name: ____Amir Vassell_____ Student ID: 154737209 Date: ___November 23, 2022___
-*
-*  Cyclic Web App URL: https://yellow-haddock-vest.cyclic.app/
-*
-*  GitHub Repository URL: https://github.com/AmirV18/web322-app.git
-*
-********************************************************************************/ 
-
 var express = require("express"); 
 const res = require("express/lib/response")
 var app = express(); 
@@ -346,14 +331,6 @@ app.get('/blog', async (req, res) => {
     res.render("blog", {data: viewData})
 
 });
-// app.get("/blog", (req,res) =>{
-   
-//     // blogService.gePublishedPosts().then((data) => {
-//     //     res.json(data);
-//     // }).catch((err) => {
-//     //     res.json({message: err});
-//     // })
-// });
 
 app.get('/blog/:id', async (req, res) => {
 
