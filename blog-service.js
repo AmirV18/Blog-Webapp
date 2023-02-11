@@ -1,11 +1,14 @@
+const fs = require("fs");
+const env = require('dotenv');
+env.config();
 const Sequelize = require('sequelize');
 
-const user_and_default_database = "akrbtfvq";
-const password_for_postgres = "3fOApTKNRCmEvoL4iU-jpmk28qnI0hMV";
-const server_for_postgres = "jelani.db.elephantsql.com";
+// const user_and_default_database = "akrbtfvq";
+// const password_for_postgres = "3fOApTKNRCmEvoL4iU-jpmk28qnI0hMV";
+// const server_for_postgres = "jelani.db.elephantsql.com";
 // set up sequelize to point to our postgres database
-var sequelize = new Sequelize(user_and_default_database, user_and_default_database, password_for_postgres, {
-    host: server_for_postgres,
+var sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASS, {
+    host: process.env.POSTGRES_HOST,
     dialect: 'postgres',
     port: 5432,
     dialectOptions: {
