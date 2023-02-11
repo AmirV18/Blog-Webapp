@@ -15,6 +15,9 @@ const streamifier = require('streamifier');
 const exphbs = require('express-handlebars');
 const stripJs = require('strip-js');
 
+const env = require('dotenv');
+env.config();
+
 app.engine('.hbs', exphbs.engine({ extname: '.hbs',
     helpers:{
         navLink: function(url, options){
@@ -53,9 +56,9 @@ const { rmSync } = require("fs");
 const { brotliDecompress } = require("zlib");
 
 cloudinary.config({
-    cloud_name: 'dvujduppr',
-    api_key: '796685354338326',
-    api_secret: 'Di_BUGp22RP2Qf7FocPdccOWXBg',
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.CLOUD_API_KEY,
+    api_secret: process.env.CLOUD_API_SECRET,
     secure: true
 });
 
